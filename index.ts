@@ -4,6 +4,8 @@
 // exibirPostagensPorPerfil - excecao
 
 import { AplicacaoError, AtributoVazioError, PerfilExistenteError, PerfilNaoEncontradoError, PostagemJaExisteError, PostagemNaoEncontradaError } from "./excecoes";
+import * as fs from 'fs';
+//const fs = require('fs');
 
 class Perfil{
     private _idPerfil: number;
@@ -106,6 +108,10 @@ class PostagemAvancada extends Postagem{
         return this._visualizacoesRestantes;
     }
 
+    set visualizacoesRestantes(v: number){
+        this._visualizacoesRestantes = v
+    }
+
     adicionarHashtag(hashtag:string): void{
         this.hashtags.push(hashtag);
     }
@@ -145,6 +151,133 @@ interface IRepositorioPostagens {
     consultarPostagemPorId(idPost: number): Postagem;
     incluirPostagem(postagem: Postagem): void;
 }
+
+class RepositorioDePerfisArquivo implements IRepositorioDePerfis {
+    private arquivo: string;
+
+    constructor(arquivo: string) {
+        this.arquivo = arquivo;
+    }
+
+    get perfis(): Perfil[] {
+        const dados = this.lerArquivo();
+        return dados.map((d: any) => new Perfil(d._idPerfil, d._nome, d._email));
+    }
+
+    incluirPerfil(perfil: Perfil): void {
+        const dados = this.lerArquivo();
+        dados.push(perfil);
+        this.salvarArquivo(dados);
+    }
+
+    consultarPerfil(id?: number, nome?: string, email?: string):Perfil {
+        const dados = this.lerArquivo();
+
+        const perfilEncontrado = dados.find((d: any) => {
+            return (
+                (id !== undefined && d._idPerfil === id) ||
+                (nome !== undefined && d._nome === nome) ||
+                (email !== undefined && d._email === email)
+            );
+        });
+
+        if (perfilEncontrado) {
+            return new Perfil(perfilEncontrado._idPerfil, perfilEncontrado._nome, perfilEncontrado._email);
+        }
+
+        throw new PerfilNaoEncontradoError('Perfil não encontrado');
+    }
+
+    private lerArquivo(): any[] {
+        try {
+            const conteudo = fs.readFileSync(this.arquivo, 'utf-8');
+            return JSON.parse(conteudo);
+        } catch (error) {
+            return [];
+        }
+    }
+
+    private salvarArquivo(dados: any[]): void {
+        fs.writeFileSync(this.arquivo, JSON.stringify(dados, null, 2), 'utf-8');
+    }
+}
+
+
+class RepositorioDePostagensArquivo implements IRepositorioPostagens {
+    private arquivo: string;
+
+    constructor(arquivo: string) {
+        this.arquivo = arquivo;
+    }
+
+    private lerArquivo(): any[] {
+        try {
+            const conteudo = fs.readFileSync(this.arquivo, 'utf-8');
+            return JSON.parse(conteudo);
+        } catch (error) {
+            return [];
+        }
+    }
+
+    private salvarArquivo(dados: any[]): void {
+        fs.writeFileSync(this.arquivo, JSON.stringify(dados, null, 2), 'utf-8');
+    }
+
+    get postagens(): Postagem[] {
+        return this.lerArquivo();
+    }
+
+    consultarPostagem(id?: number, texto?: string, hashtag?: string, perfil?: Perfil): Postagem[] {
+        const dados = this.lerArquivo();
+        return dados.filter((d: any) => {
+            return (
+                (id === undefined || d._idPostagem === id) &&
+                (texto === undefined || d._texto.includes(texto)) &&
+                (perfil === undefined || d._perfil === perfil) &&
+                (hashtag === undefined || (d._hashtags && d._hashtags.includes(hashtag)))
+            );
+        }).map((d: any) => {
+            return d; // Retorna a postagem sem fazer modificações
+        });
+    }
+
+    incluirPostagem(postagem: Postagem): void {
+        const dados = this.lerArquivo();
+
+        try {
+            // Adicione a lógica para verificar se a postagem já existe no arquivo
+            // ...
+
+            dados.push(postagem);
+
+            this.salvarArquivo(dados);
+
+            console.log('Postagem incluída com sucesso!');
+        } catch (e: any) {
+            if (e instanceof AplicacaoError) {
+                console.log(e.message);
+            }
+        }
+    }
+
+    consultarPorIndice(idPostagem: number): number {
+        const dados = this.lerArquivo();
+        const indice = dados.findIndex((d: any) => d._idPostagem === idPostagem);
+        return indice;
+    }
+
+    consultarPostagemPorId(idPost: number): Postagem {
+        const dados = this.lerArquivo();
+        const postagemEncontrada = dados.find((d: any) => d._idPostagem === idPost);
+
+        if (postagemEncontrada) {
+            return postagemEncontrada;
+        }
+
+        throw new Error('Postagem não encontrada');
+    }
+}
+
 
 class RepositorioDePerfisArray implements IRepositorioDePerfis {
     private _perfis: Perfil[] = [];
@@ -242,6 +375,7 @@ class RepositorioDePerfisLista implements IRepositorioDePerfis {
             }
             atual.proximo = novoNo; // adiciona ao final da lista
         }
+
     }
 
     consultarPerfil(id?: number, nome?: string, email?: string): Perfil {
@@ -360,6 +494,7 @@ class RepositorioDePostagensLista implements IRepositorioPostagens {
     }
 }
 
+
 class RepositorioDePostagensArray implements IRepositorioPostagens{
     private _postagens: Postagem[] = [];
 
@@ -461,4 +596,4 @@ class RepositorioDePostagensArray implements IRepositorioPostagens{
     }      
 }
 
-export { Perfil, Postagem, PostagemAvancada, RepositorioDePerfisArray, RepositorioDePostagensArray, IRepositorioDePerfis, IRepositorioPostagens, RepositorioDePerfisLista, RepositorioDePostagensLista }
+export { Perfil, Postagem, PostagemAvancada, RepositorioDePerfisArray, RepositorioDePostagensArray, IRepositorioDePerfis, IRepositorioPostagens, RepositorioDePerfisLista, RepositorioDePostagensLista, RepositorioDePerfisArquivo, RepositorioDePostagensArquivo }
