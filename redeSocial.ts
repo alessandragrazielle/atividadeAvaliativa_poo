@@ -8,7 +8,9 @@ class RedeSocial {
     constructor(repositorioDePerfis: IRepositorioDePerfis, repositorioDePostagens: IRepositorioPostagens) {
         this._repositorioDePerfis = repositorioDePerfis;
         this._repositorioDePostagens = repositorioDePostagens;
+       
     }
+
 
     incluirPerfil(perfil: Perfil) {
         this._repositorioDePerfis.incluirPerfil(perfil);
@@ -111,7 +113,7 @@ class RedeSocial {
         }
         return postagens;
     } 
-
+    
     exibirPerfil(idPerfil: number){ // criado exibição por perfil
         let perfilProcurado = this.consultarPerfil(idPerfil);
 
