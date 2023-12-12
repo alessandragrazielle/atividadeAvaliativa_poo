@@ -85,10 +85,8 @@ class RedeSocial {
         return postagensFiltradas;
     }
     
-    /*
     exibirPerfis(): string{
-        const perfis = this._repositorioDePerfis.perfis
-
+        let perfis = '';
         for(let p of this._repositorioDePerfis.perfis){
             perfis += `
             Id: ${p.idPerfil}
@@ -98,6 +96,20 @@ class RedeSocial {
         }
 
         return perfis;
+    } 
+
+    exibirTodasAsPostagens(): string{
+        let postagens = '';
+        for(let p of this._repositorioDePostagens.postagens){
+            postagens += `
+            Id: ${p.idPostagem}
+            Perfil: ${p.perfil.nome}
+            Texto: ${p.texto}
+            Curtidas: ${p.curtidas}
+            Descurtidas: ${p.descurtidas}
+            `
+        }
+        return postagens;
     } 
 
     exibirPerfil(idPerfil: number){ // criado exibição por perfil
@@ -183,6 +195,5 @@ class RedeSocial {
             }
         }
     }
-    */
 }
 export{ RedeSocial };
