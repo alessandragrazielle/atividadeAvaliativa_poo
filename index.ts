@@ -87,7 +87,7 @@ class Postagem{
     }
 
     ehPopular(): boolean{
-        return this.curtidas > (this.descurtidas + this.descurtidas * 50/100);
+        return this.curtidas > (this.descurtidas + this.descurtidas * (50/100));
     }
 }
 
@@ -133,13 +133,13 @@ class PostagemAvancada extends Postagem{
 }
 
 interface IRepositorioDePerfis {
-    //perfis: Perfil[];
+    get perfis(): Perfil[]; //adicionei
     incluirPerfil(perfil: Perfil): void;
     consultarPerfil(id?: number, nome?: string, email?: string): Perfil;
 }
 
 interface IRepositorioPostagens {
-    //postagens: Postagem[];
+    get postagens(): Postagem[]; //adicionei
     consultarPorIndice(idPostagem: number): number;
     consultarPostagem(id?: number, texto?: string, hashtag?: string, perfil?: Perfil): Postagem[];
     consultarPostagemPorId(idPost: number): Postagem;
@@ -149,14 +149,14 @@ interface IRepositorioPostagens {
 class RepositorioDePerfisArray implements IRepositorioDePerfis {
     private _perfis: Perfil[] = [];
 
-    get perfis(): Perfil[] {
+    get perfis(): Perfil[] { //adicionei
         return this._perfis;
     }
 
     consultarPerfil(id?: number, nome?: string, email?: string): Perfil {
         let perfilProcurado!: Perfil;
         try {
-            const perfilProcurado0 = this._perfis.find(p =>
+            const perfilProcurado0 = this.perfis.find(p => //!alterei perfis
                 (id === undefined || p.idPerfil === id) &&
                 (nome === undefined || p.nome === nome) &&
                 (email === undefined || p.email === email)
@@ -179,7 +179,7 @@ class RepositorioDePerfisArray implements IRepositorioDePerfis {
     incluirPerfil(perfil: Perfil){
         try {
             if (perfil.idPerfil && perfil.nome && perfil.email) {
-                const perfilExiste = this._perfis.find(p =>
+                const perfilExiste = this.perfis.find(p => //!alterei perfis
                     (p.idPerfil === perfil.idPerfil) ||
                     (p.nome === perfil.nome) ||
                     (p.email === perfil.email)
@@ -192,7 +192,7 @@ class RepositorioDePerfisArray implements IRepositorioDePerfis {
                 throw new AtributoVazioError('Os atributos precisam ser preenchidos!');
             }
 
-            this._perfis.push(perfil);
+            this.perfis.push(perfil); //!alterei perfis
             console.log('Perfil incluído com sucesso!');
         } catch (e:any){
                 if(e instanceof AplicacaoError){
@@ -217,6 +217,17 @@ class RepositorioDePerfisLista implements IRepositorioDePerfis {
 
     constructor() {
         this.inicio = null;
+    } 
+
+    get perfis(): Perfil[] { //adicionei
+        let perfis: Perfil[] = [];
+        let atual = this.inicio;
+
+        while (atual !== null) {
+            perfis.push(atual.perfil);
+            atual = atual.proximo;
+        }
+        return perfis;
     }
 
     incluirPerfil(perfil: Perfil): void {
@@ -267,6 +278,17 @@ class RepositorioDePostagensLista implements IRepositorioPostagens {
 
     constructor() {
         this.inicio = null;
+    }
+    
+    get postagens(): Postagem[] { //adicionei
+        let postagens: Postagem[] = [];
+        let atual = this.inicio;
+
+        while (atual !== null) {
+            postagens.push(atual.postagem);
+            atual = atual.proximo;
+        }
+        return postagens;
     }
 
     consultarPostagem(id?: number, texto?: string, hashtag?: string, perfil?: Perfil): Postagem[] {
@@ -341,14 +363,14 @@ class RepositorioDePostagensLista implements IRepositorioPostagens {
 class RepositorioDePostagensArray implements IRepositorioPostagens{
     private _postagens: Postagem[] = [];
 
-    get postagens(): Postagem[] {
+    get postagens(): Postagem[] { //adicionei
         return this._postagens;
     }
 
     consultarPostagem(id?: number, texto?: string, hashtag?: string, perfil?: Perfil): Postagem[]{
         let postagensFiltradas: Postagem[] = [];
     
-        for (let p of this._postagens) {
+        for (let p of this.postagens) { //!alterei postagens
             if ((id == undefined || p.idPostagem == id) &&
                 (texto == undefined || p.texto == texto) &&
                 (perfil == undefined || p.perfil == perfil)) {
@@ -398,8 +420,8 @@ class RepositorioDePostagensArray implements IRepositorioPostagens{
     consultarPorIndice(id:number){
         let indiceProcurado: number = -1;
         try{
-            for(let i = 0; i < this._postagens.length; i++){
-                if(this._postagens[i].idPostagem == id){
+            for(let i = 0; i < this.postagens.length; i++){ //!alterei postagens
+                if(this.postagens[i].idPostagem == id){
                     indiceProcurado = i;
                 }
             }
