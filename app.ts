@@ -1,6 +1,3 @@
-import prompt from 'prompt-sync';
-let input = prompt();
-
 import { RedeSocial } from "./redeSocial";
 import { Perfil, Postagem, PostagemAvancada, RepositorioDePerfisArray, RepositorioDePostagensArray,RepositorioDePostagensLista, RepositorioDePerfisLista } from "./index";
 
@@ -10,15 +7,15 @@ class App {
 
     constructor() {
         this._redeSocial1 = new RedeSocial(new RepositorioDePerfisArray(), new RepositorioDePostagensArray());
-        this._redeSocial2 = new RedeSocial(new RepositorioDePerfisLista, new RepositorioDePostagensLista());
+        this._redeSocial2 = new RedeSocial(new RepositorioDePerfisLista(), new RepositorioDePostagensLista());
     }
     
     private _idPerfilAnterior: number = 0;
     private _IdPostagemAnterior: number = 0;
 
     get redeSocial(): RedeSocial {
+        return this._redeSocial2;
         return this._redeSocial1;
-        return this._redeSocial2
     }
 
     menu(): void{
@@ -39,7 +36,7 @@ class App {
                     break;
                 case "2":
                     this.incluirPerfil();
-                    break;/*
+                    break;
                 case "3": 
                     this.consultarPostagem();
                     break;
@@ -55,7 +52,7 @@ class App {
                 case "7":
                     this.exibirPerfis();
                     break;
-                /*case "8":
+                case "8":
                     this.exibirTodasPostagens();
                     break;
                 case "9": 
@@ -63,7 +60,7 @@ class App {
                     break;
                 case"10":
                     this.editarPerfil();
-                    break*/
+                    break;
                 case "0": console.log('Aplicação encerrada!');
                     break;
                 default:
@@ -89,7 +86,7 @@ class App {
         let novoPerfil: Perfil = new Perfil(idPerfil, nome, email)
         this.redeSocial.incluirPerfil(novoPerfil);
     }
- /*
+ 
     consultarPostagem(): void{
         let opcao: string = '';
 
@@ -276,7 +273,7 @@ class App {
         console.log(this.redeSocial.exibirPerfis());
     }
 
-    /*exibirTodasPostagens(): void{
+    exibirTodasPostagens(): void{
         console.log('TODAS AS POSTAGENS');
         console.log(this.redeSocial.exibirTodasAsPostagens())
     }
@@ -309,7 +306,7 @@ class App {
             console.log('Opção inválida');
         }        
     }
-    */
+    
 }
 
 const meuApp: App = new App();
