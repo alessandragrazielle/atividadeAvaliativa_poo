@@ -1,13 +1,16 @@
+import prompt from 'prompt-sync';
+let input = prompt();
+
 import { RedeSocial } from "./redeSocial";
-import { Perfil, Postagem, PostagemAvancada, RepositorioDePerfisArray, RepositorioDePostagensArray,RepositorioDePostagensLista, RepositorioDePerfisLista } from "./index";
+import { Perfil, Postagem, PostagemAvancada, RepositorioDePerfisArray, RepositorioDePostagensArray,RepositorioDePostagensLista, RepositorioDePerfisLista, RepositorioDePerfisArquivo, RepositorioDePostagensArquivo } from "./index";
 
 class App {
-    private _redeSocial1: RedeSocial;
+    //private _redeSocial1: RedeSocial;
     private _redeSocial2: RedeSocial;
 
     constructor() {
-        this._redeSocial1 = new RedeSocial(new RepositorioDePerfisArray(), new RepositorioDePostagensArray());
-        this._redeSocial2 = new RedeSocial(new RepositorioDePerfisLista(), new RepositorioDePostagensLista());
+        //this._redeSocial1 = new RedeSocial(new RepositorioDePerfisArray(), new RepositorioDePostagensArray());
+        this._redeSocial2 = new RedeSocial( new RepositorioDePerfisArquivo('perfis.json'), new RepositorioDePostagensArquivo('postagens.json'));
     }
     
     private _idPerfilAnterior: number = 0;
@@ -15,8 +18,8 @@ class App {
 
     get redeSocial(): RedeSocial {
         return this._redeSocial2;
-        return this._redeSocial1;
-    }
+        //return this._redeSocial1;
+    }    
 
     menu(): void{
         let opcao: string = '';
