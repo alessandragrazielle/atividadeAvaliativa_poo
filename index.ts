@@ -1,11 +1,12 @@
 // as vizualizacoes nao estao decrementando 
 // postagensPopulares
 // excluirPostagem
-// exibirPostagensPorPerfil - excecao
+// consultar por hashtag 
+// consultar por perfil
+// curtir e descurtir
 
 import { AplicacaoError, AtributoVazioError, PerfilExistenteError, PerfilNaoEncontradoError, PostagemJaExisteError, PostagemNaoEncontradaError } from "./excecoes";
 import * as fs from 'fs';
-//const fs = require('fs');
 
 class Perfil{
     private _idPerfil: number;
@@ -41,19 +42,25 @@ class Perfil{
     set email(email: string){
         this._email = email;
     }
+
+    set idPerfil(id: number){
+        this._idPerfil = id;
+    }
 }
 
 class Postagem{
     private _idPostagem: number;
     private _texto: string;
-    private _curtidas: number = 0;
-    private _descurtidas: number = 0;
+    private _curtidas: number;
+    private _descurtidas: number;
     private _data: Date = new Date();
     private _perfil: Perfil;
-    constructor(i:number, t:string, p:Perfil){
+    constructor(i:number, t:string, p:Perfil, c: number, d: number){
         this._idPostagem = i;
         this._texto = t;
         this._perfil = p;
+        this._curtidas = c;
+        this._descurtidas = d
     }
 
     get idPostagem(): number{
@@ -80,6 +87,10 @@ class Postagem{
         return this._perfil;
     }
 
+    set idPostagem(id: number){
+        this._idPostagem = id;
+    }
+
     curtir(): void{
         this._curtidas ++;
     }
@@ -96,8 +107,8 @@ class Postagem{
 class PostagemAvancada extends Postagem{
     private _hashtags: string[] = [];
     private _visualizacoesRestantes: number = 1;
-    constructor(i:number, t:string, p:Perfil){
-        super(i, t, p);
+    constructor(i:number, t:string, p:Perfil, c: number, d: number){
+        super(i, t, p, c, d);
     }
 
     get hashtags(): string[] {
@@ -165,11 +176,27 @@ class RepositorioDePerfisArquivo implements IRepositorioDePerfis {
     }
 
     incluirPerfil(perfil: Perfil): void {
-        const dados = this.lerArquivo();
-        dados.push(perfil);
-        this.salvarArquivo(dados);
-    }
+        if (perfil.nome && perfil.email) {
+            const dados = this.lerArquivo();
+            const perfilExiste = this.perfis.find(p => //!alterei perfis
+                (p.idPerfil === perfil.idPerfil) ||
+                (p.nome === perfil.nome) ||
+                (p.email === perfil.email))
+                    
+            if (perfilExiste) {
+                throw new PerfilExistenteError('O perfil já existe');
 
+            }
+            perfil.idPerfil = dados.length + 1;  // Atualiza o ID do perfil
+            dados.push(perfil);
+            this.salvarArquivo(dados);
+            
+
+        } else {
+            throw new AtributoVazioError('Os atributos precisam ser preenchidos!');
+        }
+    }
+    
     consultarPerfil(id?: number, nome?: string, email?: string):Perfil {
         const dados = this.lerArquivo();
 
@@ -181,11 +208,11 @@ class RepositorioDePerfisArquivo implements IRepositorioDePerfis {
             );
         });
 
-        if (perfilEncontrado) {
-            return new Perfil(perfilEncontrado._idPerfil, perfilEncontrado._nome, perfilEncontrado._email);
+        if (!perfilEncontrado) {
+            throw new PerfilNaoEncontradoError('Perfil não encontrado!');
         }
 
-        throw new PerfilNaoEncontradoError('Perfil não encontrado');
+        return new Perfil(perfilEncontrado._idPerfil, perfilEncontrado._nome, perfilEncontrado._email);
     }
 
     private lerArquivo(): any[] {
@@ -201,7 +228,6 @@ class RepositorioDePerfisArquivo implements IRepositorioDePerfis {
         fs.writeFileSync(this.arquivo, JSON.stringify(dados, null, 2), 'utf-8');
     }
 }
-
 
 class RepositorioDePostagensArquivo implements IRepositorioPostagens {
     private arquivo: string;
@@ -229,55 +255,59 @@ class RepositorioDePostagensArquivo implements IRepositorioPostagens {
 
     consultarPostagem(id?: number, texto?: string, hashtag?: string, perfil?: Perfil): Postagem[] {
         const dados = this.lerArquivo();
-        return dados.filter((d: any) => {
-            return (
-                (id === undefined || d._idPostagem === id) &&
-                (texto === undefined || d._texto.includes(texto)) &&
-                (perfil === undefined || d._perfil === perfil) &&
-                (hashtag === undefined || (d._hashtags && d._hashtags.includes(hashtag)))
-            );
-        }).map((d: any) => {
-            return d; // Retorna a postagem sem fazer modificações
-        });
+        const postagensFiltradas = dados
+            .filter((d: any) => {
+                return (
+                    (id === undefined || d._idPostagem === id) &&
+                    (texto === undefined || d._texto.includes(texto)) &&
+                    (perfil === undefined || d._perfil === perfil) &&
+                    (hashtag === undefined || (d._hashtags && d._hashtags.includes(hashtag)))
+                );
+            });
+
+        if (postagensFiltradas.length === 0) {
+            throw new PostagemNaoEncontradaError('Postagem não encontrada');
+        }
+
+        return postagensFiltradas.map((d: any) => d);
     }
 
     incluirPostagem(postagem: Postagem): void {
         const dados = this.lerArquivo();
-
-        try {
-            // Adicione a lógica para verificar se a postagem já existe no arquivo
-            // ...
-
+    
+        if (postagem.texto.trim() && postagem.perfil) {
+            postagem.idPostagem = dados.length + 1;  // Atualiza o ID da postagem
             dados.push(postagem);
-
             this.salvarArquivo(dados);
-
-            console.log('Postagem incluída com sucesso!');
-        } catch (e: any) {
-            if (e instanceof AplicacaoError) {
-                console.log(e.message);
-            }
+        } else {
+            throw new AtributoVazioError('Todos os atributos da postagem devem estar preenchidos!');
         }
-    }
+    }    
 
     consultarPorIndice(idPostagem: number): number {
         const dados = this.lerArquivo();
         const indice = dados.findIndex((d: any) => d._idPostagem === idPostagem);
+
+        if(indice == -1){
+            throw new PostagemNaoEncontradaError('Postagem não encontrada');
+        }
+        
         return indice;
     }
 
     consultarPostagemPorId(idPost: number): Postagem {
         const dados = this.lerArquivo();
-        const postagemEncontrada = dados.find((d: any) => d._idPostagem === idPost);
+        const postagemProcurada = dados.find((d: any) => d._idPostagem === idPost);
 
-        if (postagemEncontrada) {
-            return postagemEncontrada;
+        if(!postagemProcurada){
+            throw new PostagemNaoEncontradaError('Postagem não encontrada');
         }
 
-        throw new Error('Postagem não encontrada');
-    }
+        this.salvarArquivo(dados)
+        return postagemProcurada;
+    } 
+    
 }
-
 
 class RepositorioDePerfisArray implements IRepositorioDePerfis {
     private _perfis: Perfil[] = [];
@@ -289,7 +319,7 @@ class RepositorioDePerfisArray implements IRepositorioDePerfis {
     consultarPerfil(id?: number, nome?: string, email?: string): Perfil {
         let perfilProcurado!: Perfil;
         try {
-            const perfilProcurado0 = this.perfis.find(p => //!alterei perfis
+            const perfilProcurado0 = this.perfis.find(p =>
                 (id === undefined || p.idPerfil === id) &&
                 (nome === undefined || p.nome === nome) &&
                 (email === undefined || p.email === email)
