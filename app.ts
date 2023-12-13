@@ -3,6 +3,7 @@ let input = prompt();
 
 import { RedeSocial } from "./redeSocial";
 import { Perfil, Postagem, PostagemAvancada, RepositorioDePerfisArray, RepositorioDePostagensArray,RepositorioDePostagensLista, RepositorioDePerfisLista, RepositorioDePerfisArquivo, RepositorioDePostagensArquivo } from "./index";
+import { AplicacaoError } from './excecoes';
 
 class App {
     //private _redeSocial1: RedeSocial;
@@ -13,8 +14,8 @@ class App {
         this._redeSocial2 = new RedeSocial( new RepositorioDePerfisArquivo('perfis.json'), new RepositorioDePostagensArquivo('postagens.json'));
     }
     
-    private _idPerfilAnterior: number = 0;
-    private _IdPostagemAnterior: number = 0;
+    //private _idPerfilAnterior: number = 0;
+    //private _IdPostagemAnterior: number = 0;
 
     get redeSocial(): RedeSocial {
         return this._redeSocial2;
@@ -24,52 +25,60 @@ class App {
     menu(): void{
         let opcao: string = '';
         do {
-            console.log('\nBEM VINDO AO APP \nDigite uma opção: ');
-            console.log('1 - Consultar Perfil    2 - Incluir Perfil      3 - Consultar Postagem\n' +
-                        '4 - Incluir Postagem    5 - Avaliar Postagens   6 - Exibir Postagens Populares \n' +
-                        '7 - Exibir Todos os Perfis        8 - Exibir Todas as Postagens       9 - Excluir Postagem\n' +
-                        '10 - Editar Perfil \n' +
-                        '0 - Sair \n');
+            try {
+                console.log('\nBEM VINDO AO APP \nDigite uma opção: ');
+                console.log('1 - Consultar Perfil    2 - Incluir Perfil      3 - Consultar Postagem\n' +
+                            '4 - Incluir Postagem    5 - Avaliar Postagens   6 - Exibir Postagens Populares \n' +
+                            '7 - Exibir Todos os Perfis        8 - Exibir Todas as Postagens       9 - Excluir Postagem\n' +
+                            '10 - Editar Perfil \n' +
+                            '0 - Sair \n');
 
-            opcao = input("Opção: ");
-            
-            switch (opcao) {
-                case "1":
-                    this.consultarPerfil();
-                    break;
-                case "2":
-                    this.incluirPerfil();
-                    break;
-                case "3": 
-                    this.consultarPostagem();
-                    break;
-                case "4":
-                    this.incluirPostagem();
-                    break;
-                case "5":
-                    this.avaliarPostagem();
-                    break;
-                case "6":
-                    this.postagensPopulares();
-                    break;
-                case "7":
-                    this.exibirPerfis();
-                    break;
-                case "8":
-                    this.exibirTodasPostagens();
-                    break;
-                case "9": 
-                    this.excluirPostagem();
-                    break;
-                case"10":
-                    this.editarPerfil();
-                    break;
-                case "0": console.log('Aplicação encerrada!');
-                    break;
-                default:
-                    console.log("Opção inválida. Tente novamente.");
-                    break;
+                opcao = input("Opção: ");
+                
+                switch (opcao) {
+                    case "1":
+                        this.consultarPerfil();
+                        break;
+                    case "2":
+                        this.incluirPerfil();
+                        break;
+                    case "3": 
+                        this.consultarPostagem();
+                        break;
+                    case "4":
+                        this.incluirPostagem();
+                        break;
+                    case "5":
+                        this.avaliarPostagem();
+                        break;
+                    case "6":
+                        this.postagensPopulares();
+                        break;
+                    case "7":
+                        this.exibirPerfis();
+                        break;
+                    case "8":
+                        this.exibirTodasPostagens();
+                        break;
+                    case "9": 
+                        this.excluirPostagem();
+                        break;
+                    case"10":
+                        this.editarPerfil();
+                        break;
+                    case "0": console.log('Aplicação encerrada!');
+                        break;
+                    default:
+                        console.log("Opção inválida. Tente novamente.");
+                        break;
+                }
+        } catch (e: any) {
+            if (e instanceof AplicacaoError) {
+                console.log(e.message);
             }
+        } finally {
+            console.log("\nOperação finalizada. Digite 0 para sair");
+        }
         } while (opcao != "0");
     }
 
@@ -82,13 +91,13 @@ class App {
 
     incluirPerfil(): void {
         console.log('\nCADASTRAR PERFIL');
-        let idPerfil = ++this._idPerfilAnterior;
         let nome: string = input('Nome do seu perfil: ');
         let email: string = input('Digite seu email: ');
-
-        let novoPerfil: Perfil = new Perfil(idPerfil, nome, email)
+    
+        let novoPerfil: Perfil = new Perfil(0, nome, email);  // O ID será atualizado no RepositorioDePerfisArquivo
         this.redeSocial.incluirPerfil(novoPerfil);
     }
+    
  
     consultarPostagem(): void{
         let opcao: string = '';
@@ -160,30 +169,29 @@ class App {
 
     incluirPostagem(): void {
         console.log('\nINCLUIR POSTAGEM');
-        let idPostagem = ++this._IdPostagemAnterior;
         let nomePerfil: string = input('Qual seu nome de perfil? ');
-        let texto: string = input('O que voce esta pensando? ');
+        let texto: string = input('O que você está pensando? ');
         let temHashtag: string = input('Deseja adicionar hashtag? (s/n) ');
-
+    
         let perfil = this.redeSocial.consultarPerfil(undefined, nomePerfil);
-
-        if(temHashtag == 'n'){
-            let novaPostagem: Postagem = new Postagem(idPostagem, texto, perfil);   
+    
+        if (temHashtag == 'n') {
+            let novaPostagem: Postagem = new Postagem(0, texto, perfil, 0, 0);   
             this.redeSocial.incluirPostagem(novaPostagem);       
         } else if (temHashtag == 's') {
             let quantidadeStr = input('Quantas hashtags deseja adicionar? ');
             let quantidade: number = parseFloat(quantidadeStr);
-
-            let novaPostagem: PostagemAvancada = new PostagemAvancada(idPostagem, texto, perfil); 
-
-            for(let i=1; i<=quantidade; i++){
+    
+            let novaPostagem: PostagemAvancada = new PostagemAvancada(0, texto, perfil, 0, 0); 
+    
+            for (let i = 1; i <= quantidade; i++) {
                 let hashtag = input('Adicione uma hashtag: ');
                 novaPostagem.adicionarHashtag(hashtag);
             }
-
+    
             this.redeSocial.incluirPostagem(novaPostagem);
         }        
-    }
+    }    
 
     avaliarPostagem(): void {
         let opcao: string = '';
