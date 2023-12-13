@@ -11,7 +11,6 @@ class RedeSocial {
        
     }
 
-
     incluirPerfil(perfil: Perfil) {
         this._repositorioDePerfis.incluirPerfil(perfil);
     }
@@ -29,16 +28,18 @@ class RedeSocial {
     }
 
     curtir(idPost: number): void {
-        let postagemProcurada = this._repositorioDePostagens.consultarPostagemPorId(idPost)
+        let postagemProcurada = this._repositorioDePostagens.consultarPostagemPorId(idPost);
         if (postagemProcurada.idPostagem == idPost) {
-            postagemProcurada.curtir();     
+            postagemProcurada.curtir();
+            this._repositorioDePostagens.incluirPostagem(postagemProcurada);
         }
     }
-
+    
     descurtir(idPost: number): void {
-        let postagemProcurada = this._repositorioDePostagens.consultarPostagemPorId(idPost)
+        let postagemProcurada = this._repositorioDePostagens.consultarPostagemPorId(idPost);
         if (postagemProcurada.idPostagem == idPost) {
-            postagemProcurada.descurtir();     
+            postagemProcurada.descurtir();
+            this._repositorioDePostagens.incluirPostagem(postagemProcurada);
         }
     }
 
@@ -172,7 +173,10 @@ class RedeSocial {
     editarNome(antigoNome: string, nomeNovo: string){
         try{
             let perfil = this.consultarPerfil(undefined, antigoNome);
-            if(perfil){perfil.nome = nomeNovo}
+            if(perfil) { 
+                perfil.nome = nomeNovo
+                this._repositorioDePerfis.incluirPerfil(perfil)
+            }
 
             if(!perfil){
                 throw new PerfilNaoEncontradoError('Perfil não encontrado!');
